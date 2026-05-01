@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel, EmailStr, Field, field_validator
+from typing import Optional
 import re
 
 from app.api.deps import get_db_dep, get_current_active_user
