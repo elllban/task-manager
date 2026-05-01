@@ -73,10 +73,12 @@ async def get_calendar_dates(
     current_user: User = Depends(get_current_active_user),
     month: int = Query(..., ge=1, le=12),
     year: int = Query(...),
+    completed: Optional[bool] = Query(None),
+    priority: Optional[List[TaskPriority]] = Query(None),
     db: AsyncSession = Depends(get_db_dep)
 ):
     service = TaskService(db)
-    return await service.get_calendar_dates(current_user, year, month)
+    return await service.get_calendar_dates(current_user, year, month, completed, priority)
 
 
 @router.get("/calendar")
@@ -84,10 +86,12 @@ async def get_calendar_tasks(
     current_user: User = Depends(get_current_active_user),
     month: int = Query(..., ge=1, le=12),
     year: int = Query(...),
+    completed: Optional[bool] = Query(None),
+    priority: Optional[List[TaskPriority]] = Query(None),
     db: AsyncSession = Depends(get_db_dep)
 ):
     service = TaskService(db)
-    return await service.get_calendar_tasks(current_user, year, month)
+    return await service.get_calendar_tasks(current_user, year, month, completed, priority)
 
 
 @router.get("/{task_id}", response_model=TaskResponse)

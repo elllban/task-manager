@@ -201,7 +201,7 @@ class TaskService:
             "pending": len([t for t in tasks if not t.completed])
         }
 
-    async def get_calendar_tasks(self, current_user: User, year: int, month: int) -> List[TaskResponse]:
+    async def get_calendar_tasks(self, current_user: User, year: int, month: int, completed: Optional[bool] = None, priority: Optional[List[TaskPriority]] = None) -> List[TaskResponse]:
         start_date = datetime(year, month, 1)
         if month == 12:
             end_date = datetime(year + 1, 1, 1)
@@ -214,22 +214,30 @@ class TaskService:
         if not project_ids:
             return []
 
-        tasks = await self.task_repo.get_by_due_date_range_and_projects(start_date, end_date, project_ids)
-
-        result = []
-        for task in tasks:
-            task_result = await self.db.execute(
-                select(Task)
-                .where(Task.id == task.id)
-                .options(
-                    selectinload(Task.assignee),
-                    selectinload(Task.author),
-                    selectinload(Task.project).selectinload(Project.category)
-                )
+        query = (
+            select(Task)
+            .where(
+                Task.project_id.in_(project_ids),
+                Task.due_date >= start_date,
+                Task.due_date < end_date
             )
-            loaded_task = task_result.scalar_one()
-            result.append(TaskResponse.from_task(loaded_task))
-        return result
+            .options(
+                selectinload(Task.assignee),
+                selectinload(Task.author),
+                selectinload(Task.project).selectinload(Project.category)
+            )
+        )
+
+        if completed is not None:
+            query = query.where(Task.completed == completed)
+
+        if priority:
+            priorities = [p.value if hasattr(p, 'value') else p for p in priority]
+            query = query.where(Task.priority.in_(priorities))
+
+        result = await self.db.execute(query)
+        tasks = result.scalars().all()
+        return [TaskResponse.from_task(task) for task in tasks]
 
     async def update_task(self, task_id: int, data: TaskUpdate, current_user: User) -> Optional[TaskResponse]:
         task = await self.get_task(task_id, current_user)
@@ -306,7 +314,7 @@ class TaskService:
             result.append(TaskResponse.from_task(loaded_task))
         return result
 
-    async def get_calendar_dates(self, current_user: User, year: int, month: int) -> List[str]:
+    async def get_calendar_dates(self, current_user: User, year: int, month: int, completed: Optional[bool] = None, priority: Optional[List[TaskPriority]] = None) -> List[str]:
         """Return list of dates (YYYY-MM-DD) that have tasks for the given month."""
         start_date = datetime(year, month, 1)
         if month == 12:
@@ -327,8 +335,16 @@ class TaskService:
                 Task.due_date >= start_date,
                 Task.due_date < end_date
             )
-            .distinct()
         )
+
+        if completed is not None:
+            query = query.where(Task.completed == completed)
+
+        if priority:
+            priorities = [p.value if hasattr(p, 'value') else p for p in priority]
+            query = query.where(Task.priority.in_(priorities))
+
+        query = query.distinct()
         result = await self.db.execute(query)
         dates = result.scalars().all()
         return [d.strftime("%Y-%m-%d") for d in dates if d is not None]
