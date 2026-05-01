@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime, timedelta
 from typing import List, Optional
 from fastapi import HTTPException, status
-from sqlalchemy import select, func
+from sqlalchemy import select, func, exists
 from sqlalchemy.orm import selectinload
 
 from app.repositories.task_repository import TaskRepository
@@ -162,6 +162,21 @@ class TaskService:
         if filters.due_date_to:
             query = query.where(Task.due_date <= filters.due_date_to)
 
+        if filters.has_completed_subtasks is not None:
+            subtask_alias = Task
+            subquery = (
+                select(func.count())
+                .select_from(subtask_alias)
+                .where(
+                    subtask_alias.parent_id == Task.id,
+                    subtask_alias.completed == True
+                )
+            )
+            if filters.has_completed_subtasks:
+                query = query.where(subquery > 0)
+            else:
+                query = query.where(subquery == 0)
+
         result = await self.db.execute(query)
         tasks = result.scalars().all()
         return [TaskResponse.from_task(task) for task in tasks]
@@ -170,7 +185,8 @@ class TaskService:
             self,
             user_id: int,
             completed: Optional[bool] = None,
-            priority: Optional[List[TaskPriority]] = None
+            priority: Optional[List[TaskPriority]] = None,
+            has_completed_subtasks: Optional[bool] = None
      ) -> List[TaskResponse]:
         query = (
             select(Task)
@@ -188,6 +204,21 @@ class TaskService:
         if priority:
             priorities = [p.value if hasattr(p, 'value') else p for p in priority]
             query = query.where(Task.priority.in_(priorities))
+
+        if has_completed_subtasks is not None:
+            subtask_alias = Task
+            subquery = (
+                select(func.count())
+                .select_from(subtask_alias)
+                .where(
+                    subtask_alias.parent_id == Task.id,
+                    subtask_alias.completed == True
+                )
+            )
+            if has_completed_subtasks:
+                query = query.where(subquery > 0)
+            else:
+                query = query.where(subquery == 0)
 
         result = await self.db.execute(query)
         tasks = result.scalars().all()

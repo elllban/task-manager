@@ -52,13 +52,15 @@ async def get_tasks(
     project_id: Optional[int] = Query(None),
     completed: Optional[bool] = Query(None),
     priority: Optional[List[TaskPriority]] = Query(None),
+    has_completed_subtasks: Optional[bool] = Query(None),
     db: AsyncSession = Depends(get_db_dep)
 ):
     service = TaskService(db)
     filters = TaskFilter(
         project_id=project_id,
         completed=completed,
-        priority=priority
+        priority=priority,
+        has_completed_subtasks=has_completed_subtasks
     )
     return await service.get_tasks_with_filters(current_user, filters)
 
@@ -68,13 +70,15 @@ async def get_assigned_tasks(
     current_user: User = Depends(get_current_active_user),
     completed: Optional[bool] = Query(None),
     priority: Optional[List[TaskPriority]] = Query(None),
+    has_completed_subtasks: Optional[bool] = Query(None),
     db: AsyncSession = Depends(get_db_dep)
 ):
     service = TaskService(db)
     return await service.get_assigned_tasks_with_filters(
         current_user.id,
         completed=completed,
-        priority=priority
+        priority=priority,
+        has_completed_subtasks=has_completed_subtasks
     )
 
 

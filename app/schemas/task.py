@@ -41,6 +41,7 @@ class TaskFilter(BaseModel):
     priority: Optional[List[TaskPriority]] = None
     due_date_from: Optional[datetime] = None
     due_date_to: Optional[datetime] = None
+    has_completed_subtasks: Optional[bool] = None
 
 
 class UserBrief(BaseModel):
