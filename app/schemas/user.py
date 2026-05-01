@@ -7,6 +7,7 @@ NAME_PATTERN = re.compile(r'^[A-Za-zА-Яа-я\-]+$')
 
 class UserUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=50)
+    email: Optional[EmailStr] = None
     avatar: Optional[str] = None
 
     @field_validator('name')
