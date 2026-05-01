@@ -27,6 +27,25 @@ async def create_task(
     return await service.create_task(data, current_user)
 
 
+@router.post("/calendar", response_model=TaskResponse)
+async def create_task_from_calendar(
+    data: TaskCreate,
+    date: str = Query(..., description="Date in YYYY-MM-DD format"),
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db_dep)
+):
+    from datetime import datetime
+    try:
+        due_date = datetime.strptime(date, "%Y-%m-%d")
+    except ValueError:
+        from fastapi import HTTPException, status
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid date format. Use YYYY-MM-DD")
+    
+    data.due_date = due_date
+    service = TaskService(db)
+    return await service.create_task(data, current_user)
+
+
 @router.get("/", response_model=List[TaskResponse])
 async def get_tasks(
     current_user: User = Depends(get_current_active_user),
