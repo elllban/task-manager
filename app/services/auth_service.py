@@ -21,7 +21,7 @@ class AuthService:
         self.db = db
         self.user_repo = UserRepository(db)
 
-    async def register(self, email: str, password: str, name: str) -> dict:
+    async def register(self, email: str, password: str, name: Optional[str] = None) -> dict:
         existing = await self.user_repo.get_by_email(email)
         if existing:
             raise ValueError("Email already registered")

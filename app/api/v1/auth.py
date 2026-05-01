@@ -24,7 +24,7 @@ class RegisterRequest(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=8, max_length=16)
     password_confirm: str = Field(..., min_length=8, max_length=16)
-    name: str = Field(..., min_length=1, max_length=50)
+    name: Optional[str] = Field(None, min_length=1, max_length=50)
 
     @field_validator('password')
     def password_valid_chars(cls, v):
