@@ -171,7 +171,7 @@ class TaskService:
             user_id: int,
             completed: Optional[bool] = None,
             priority: Optional[List[TaskPriority]] = None
-    ) -> List[TaskResponse]:
+     ) -> List[TaskResponse]:
         query = (
             select(Task)
             .where(Task.assignee_id == user_id)
@@ -191,7 +191,7 @@ class TaskService:
 
         result = await self.db.execute(query)
         tasks = result.scalars().all()
-        return [TaskResponse.from_task(task) for task in tasks]
+        return [TaskResponse.from_task(task, hide_project_category=True) for task in tasks]
 
     async def get_assigned_stats(self, user_id: int) -> dict:
         tasks = await self.task_repo.get_by_assignee(user_id)
@@ -237,7 +237,7 @@ class TaskService:
 
         result = await self.db.execute(query)
         tasks = result.scalars().all()
-        return [TaskResponse.from_task(task) for task in tasks]
+        return [TaskResponse.from_task(task, hide_project_category=(task.assignee_id == current_user.id)) for task in tasks]
 
     async def update_task(self, task_id: int, data: TaskUpdate, current_user: User) -> Optional[TaskResponse]:
         task = await self.get_task(task_id, current_user)

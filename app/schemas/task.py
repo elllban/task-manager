@@ -88,7 +88,7 @@ class TaskResponse(BaseModel):
         from_attributes = True
 
     @classmethod
-    def from_task(cls, task: "Task") -> "TaskResponse":
+    def from_task(cls, task: "Task", hide_project_category: bool = False) -> "TaskResponse":
         preview = None
         if task.description:
             preview = task.description[:100] + "..." if len(task.description) > 100 else task.description
@@ -110,12 +110,12 @@ class TaskResponse(BaseModel):
                 id=task.project.id,
                 name=task.project.name,
                 icon=task.project.icon
-            ) if task.project else None,
+            ) if task.project and not hide_project_category else None,
             category=CategoryBrief(
                 id=task.project.category.id,
                 name=task.project.category.name,
                 color=task.project.category.color
-            ) if task.project and task.project.category else None,
+            ) if task.project and task.project.category and not hide_project_category else None,
             author_id=task.author_id,
             author=UserBrief(
                 id=task.author.id,
