@@ -1,12 +1,12 @@
-from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional
+
+from pydantic import BaseModel
 
 
 class AttachmentCreate(BaseModel):
     file_name: str
     file_path: str
-    content_type: Optional[str] = None
+    content_type: str | None = None
 
 
 class AttachmentResponse(BaseModel):
@@ -14,7 +14,7 @@ class AttachmentResponse(BaseModel):
     task_id: int
     file_name: str
     file_path: str
-    content_type: Optional[str] = None
+    content_type: str | None = None
     uploaded_at: datetime
 
     class Config:

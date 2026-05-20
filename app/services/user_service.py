@@ -1,9 +1,12 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List, Optional
 from fastapi import HTTPException, status
-from app.repositories.user_repository import UserRepository
-from app.schemas.user import UserUpdate
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.models.user import User
+from app.repositories.pagination import paginate
+from app.repositories.user_repository import UserRepository
+from app.schemas.pagination import PaginatedResponse, PaginationParams
+from app.schemas.user import UserUpdate
 
 
 class UserService:
@@ -11,13 +14,14 @@ class UserService:
         self.db = db
         self.repo = UserRepository(db)
 
-    async def get_user(self, user_id: int) -> Optional[User]:
+    async def get_user(self, user_id: int) -> User | None:
         return await self.repo.get(user_id)
 
-    async def get_all_users(self) -> List[User]:
-        return await self.repo.get_all()
+    async def get_all_users(self, pagination: PaginationParams = PaginationParams()) -> PaginatedResponse[User]:
+        query = select(User)
+        return await paginate(self.db, query, pagination)
 
-    async def update_user(self, user_id: int, data: UserUpdate) -> Optional[User]:
+    async def update_user(self, user_id: int, data: UserUpdate) -> User | None:
         user = await self.repo.get(user_id)
         if not user:
             return None
@@ -29,14 +33,11 @@ class UserService:
         if 'email' in update_data:
             existing = await self.repo.get_by_email(update_data['email'])
             if existing and existing.id != user_id:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Email already registered"
-                )
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Email already registered')
 
         return await self.repo.update(user_id, **update_data)
 
-    async def update_avatar(self, user_id: int, avatar_url: str) -> Optional[User]:
+    async def update_avatar(self, user_id: int, avatar_url: str) -> User | None:
         return await self.repo.update(user_id, avatar=avatar_url)
 
     async def delete_user(self, user_id: int) -> bool:

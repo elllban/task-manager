@@ -1,14 +1,15 @@
-from pydantic import BaseModel, EmailStr, Field, field_validator
-from datetime import datetime
-from typing import Optional
 import re
+from datetime import datetime
+
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 NAME_PATTERN = re.compile(r'^[A-Za-zА-Яа-я\-]+$')
 
+
 class UserUpdate(BaseModel):
-    name: Optional[str] = Field(None, min_length=1, max_length=50)
-    email: Optional[EmailStr] = None
-    avatar: Optional[str] = None
+    name: str | None = Field(None, min_length=1, max_length=50)
+    email: EmailStr | None = None
+    avatar: str | None = None
 
     @field_validator('name')
     def validate_name(cls, v):
@@ -20,8 +21,8 @@ class UserUpdate(BaseModel):
 class UserResponse(BaseModel):
     id: int
     email: str
-    name: Optional[str] = None
-    avatar: Optional[str] = None
+    name: str | None = None
+    avatar: str | None = None
     created_at: datetime
 
     class Config:

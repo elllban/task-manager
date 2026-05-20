@@ -1,16 +1,16 @@
-from pydantic import BaseModel, Field
 from datetime import datetime
-from typing import Optional
+
+from pydantic import BaseModel, Field
 
 
 class CategoryCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
-    color: Optional[str] = Field("#808080", pattern="^#[0-9A-Fa-f]{6}$")
+    color: str | None = Field('#808080', pattern='^#[0-9A-Fa-f]{6}$')
 
 
 class CategoryUpdate(BaseModel):
-    name: Optional[str] = Field(None, min_length=1, max_length=100)
-    color: Optional[str] = Field(None, pattern="^#[0-9A-Fa-f]{6}$")
+    name: str | None = Field(None, min_length=1, max_length=100)
+    color: str | None = Field(None, pattern='^#[0-9A-Fa-f]{6}$')
 
 
 class CategoryResponse(BaseModel):
