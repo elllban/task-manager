@@ -6,7 +6,7 @@ install:
 dev:
 	uvicorn app.main:app --reload --host 0.0.0.0
 
-test: test-unit
+test: test-unit test-integration
 
 test-unit:
 	pytest tests/unit/ -v --tb=short
