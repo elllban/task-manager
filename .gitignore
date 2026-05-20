@@ -11,3 +11,7 @@ uploads/
 *.egg-info/
 dist/
 build/
+test.db
+htmlcov/
+.coverage
+.pytest_cache/
